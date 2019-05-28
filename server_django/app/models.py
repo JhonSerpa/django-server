@@ -15,8 +15,8 @@ class MediaAuthor(models.Model):
 
 class Media(models.Model):
     name = models.CharField(max_length=70)
-    date_published = models.DateTimeField(default=datetime.date.today)
-    date_added = models.DateTimeField(default=datetime.date.today)
+    date_published = models.DateField(default=datetime.date.today)
+    date_added = models.DateField(default=datetime.date.today)
 
     #Media genre
     ACTION = "Action"
@@ -79,4 +79,4 @@ class Review(models.Model):
     review = models.CharField(max_length=1000)
 
     def __str__(self):
-        return self.author + " - " + self.media
+        return str(self.author) + " - " + str(self.media)

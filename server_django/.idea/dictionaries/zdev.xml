@@ -1,7 +1,18 @@
 <component name="ProjectDictionaryState">
   <dictionary name="zdev">
     <words>
+      <w>addmedia</w>
+      <w>addmediaauthors</w>
+      <w>addreview</w>
+      <w>adduser</w>
+      <w>allmedia</w>
+      <w>allmediaauthors</w>
+      <w>allreviews</w>
       <w>corsheaders</w>
+      <w>mediaauthors</w>
+      <w>removemedia</w>
+      <w>removemediaauthors</w>
+      <w>reviewmedia</w>
     </words>
   </dictionary>
 </component>

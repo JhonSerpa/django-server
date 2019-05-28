@@ -31,14 +31,14 @@ urlpatterns = [
     path('ws/allmediaauthors', views.get_all_media_authors),
     path('ws/mediaauthors', views.get_media_authors),
     path('ws/addmediaauthors', views.add_media_author),
-    path('ws/removemediaauthors/<int:id>', views.get_all_media),
+    path('ws/removemediaauthors/<int:id>', views.del_media_author),
 
-    path('ws/allreviews', views.get_all_media),
-    path('ws/reviewmedia', views.get_all_media),
-    path('ws/addreview/<int:id>', views.get_all_media),
+    path('ws/allreviews', views.get_all_reviews),
+    path('ws/reviewmedia', views.get_media_reviews),
+    path('ws/addreview', views.add_review),
 
-    path('ws/user/<int:id>', views.get_all_media),
-    path('ws/adduser', views.get_all_media),
+    path('ws/user', views.get_user),
+    path('ws/adduser', views.add_user),
 
     path('', views.home, name='home'),
     path('admin/', admin.site.urls),

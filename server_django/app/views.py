@@ -143,10 +143,93 @@ def add_media_author(request):
 
 
 @api_view(["DELETE"])
-def del_media(request, id):
+def del_media_author(request, id):
     try:
         media_author = MediaAuthor.objects.get(id=id)
     except MediaAuthor.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
     media_author.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+"""
+    Gets all reviews
+"""
+
+
+@api_view(["GET"])
+def get_all_reviews(request):
+    reviews = Review.objects.all()
+    if 'max' in request.GET:
+        _max = int(request.GET['max'])
+        reviews = reviews[:_max]
+    serializer = ReviewSerializer(reviews, many=True)
+    return Response(serializer.data)
+
+
+"""
+    Gets reviews of a media
+"""
+
+
+@api_view(["GET"])
+def get_media_reviews(request):
+    id = int(request.GET["id"])
+
+    try:
+        review_list = Review.objects.filter(media=id)
+    except Review.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ReviewSerializer(review_list, many=True)
+    return Response(serializer.data)
+
+
+"""
+    Adds a review
+"""
+
+
+@api_view(['POST'])
+def add_review(request):
+    serializer = ReviewSerializer(data=request.data)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+"""
+    Gets the user
+"""
+
+
+@api_view(["GET"])
+def get_user(request):
+    id = int(request.GET["id"])
+
+    try:
+        user = User.objects.filter(id=id)
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = UserSerializer(user)
+    return Response(serializer.data)
+
+
+"""
+    Adds a user
+"""
+
+
+@api_view(['POST'])
+def add_user(request):
+    serializer = UserSerializer(data=request.data)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
