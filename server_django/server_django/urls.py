@@ -20,6 +20,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib import admin
 from django.urls import path
 from app import views
+from rest_framework.authtoken.views import ObtainAuthToken
 
 urlpatterns = [
     # web services
@@ -42,6 +43,8 @@ urlpatterns = [
 
     path('', views.home, name='home'),
     path('admin/', admin.site.urls),
+
+    path('ws/auth/', ObtainAuthToken.as_view()),
 
 ]
 
