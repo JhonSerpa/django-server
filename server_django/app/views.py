@@ -1,34 +1,21 @@
-from django.shortcuts import render
-from django.http import HttpRequest, HttpResponse
 from datetime import datetime
 from rest_framework import status
 from rest_framework.decorators import api_view
-from app.models import MediaAuthor, Media, User, Review
+from app.models import MediaAuthor, Media, User, Review, TokenManagement
 from rest_framework.response import Response
 from app.serializers import MediaAuthorSerializer, MediaSerializer, UserSerializer, ReviewSerializer, \
-    AdminUserSerializer, ComboSerializer
+    AdminUserSerializer, ComboSerializer, TokenSerializer
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import authentication_classes, permission_classes
 from django.contrib.auth.models import User as uu
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
+from collections import namedtuple
 
 
-def home(request):
-    """Renders the home page."""
-    assert isinstance(request, HttpRequest)
-    tparams = {
-        'title': 'Home Page',
-        'year': datetime.now().year,
-    }
-    return render(request, 'index.html', tparams)
-
-
-""" 
-    Gets all media 
-    Given a <b> max </b> num returns that ammount
-"""
-
-
+# Gets all media
+# Given 'max' it returns the max number
 @api_view(['GET'])
 def get_all_media(request):
     media = Media.objects.all()
@@ -39,31 +26,25 @@ def get_all_media(request):
     return Response(serializer.data)
 
 
-"""
-    Gets a media given an ID
-"""
-
-
+# Gets a single media given an id
+# noinspection PyBroadException
 @api_view(['GET'])
-def get_media(request):
-    id = int(request.GET['id'])
+def get_single_media(request):
+    try:
+        media_id = int(request.GET['id'])
+    except:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        media = Media.objects.get(id=id)
+        media = Media.objects.get(id=media_id)
     except Media.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     serializer = MediaSerializer(media)
-    return Response(serializer.data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-"""
-    Adds media to the database!
-
-    todo: Images seem to not work correctly
-"""
-
-
+# Adds New media to DB
 @api_view(['POST'])
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
@@ -75,6 +56,19 @@ def add_media(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+# Search media by name
+@api_view(["GET"])
+def search_media(request):
+    media_name = request.GET["name"]
+
+    try:
+        medias = Media.objects.filter(name__contains=media_name)
+    except Media.DoesNotExist:
+        return Response(status.HTTP_204_NO_CONTENT)
+
+    serializer = MediaSerializer(medias, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 """
     Deletes a given media
@@ -134,6 +128,8 @@ def get_media_authors(request):
 
 
 @api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
 def add_media_author(request):
     serializer = MediaAuthorSerializer(data=request.data)
 
@@ -149,6 +145,8 @@ def add_media_author(request):
 
 
 @api_view(["DELETE"])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
 def del_media_author(request, id):
     try:
         media_author = MediaAuthor.objects.get(id=id)
@@ -211,7 +209,6 @@ def add_review(request):
 """
     Gets the user
 """
-from collections import namedtuple
 
 Combo = namedtuple('Combo', ('user', 'admin'))
 
@@ -241,22 +238,27 @@ def get_user(request):
 
 
 """
-    Adds a user
+    Registers a user
 """
 
-
 @api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
-@permission_classes((IsAuthenticated,))
-def add_user(request):
+def register(request):
     serializer = UserSerializer(data=request.data)
 
     if serializer.is_valid():
         user = uu.objects.create_user(request.data['username'], 'example@thebeatles.com', request.data['password'])
         user.save()
 
-        serializer.authentication = user.id
-        serializer.save()
+        new_usr = User(authentication_id=user.id)
+        new_usr.save()
+
+        token, created = Token.objects.get_or_create(user=user)
+
+        tm = TokenManagement(user=new_usr, token=token.key, date_added=datetime.today())
+        tm.save()
+
+        serializer = TokenSerializer(tm)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -265,7 +267,48 @@ def add_user(request):
 def get_user_reviews(request):
     user_id = int(request.GET["id"])
     reviews = Review.objects.filter(author_id=user_id)
-    print(reviews)
     serializer = ReviewSerializer(reviews, many=True)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def login(request):
+
+    username = request.data['username']
+    password = request.data['password']
+
+    try:
+        user = authenticate(username=username, password=password)
+    except User.DoesNotExist:
+        return Response(status.HTTP_204_NO_CONTENT)
+
+    user_auth = uu.objects.get(username=user)
+    try:
+        normal_user = User.objects.get(authentication=user_auth.id)
+    except User.DoesNotExist:
+        return Response(status.HTTP_400_BAD_REQUEST)
+
+    if user is None:
+        return Response(status.HTTP_401_UNAUTHORIZED)
+    else:
+
+        if Token.objects.get(user=user_auth):
+            Token.objects.get(user=user_auth).delete()
+
+        token, created = Token.objects.get_or_create(user=user_auth)
+
+        try:
+            t_manager = TokenManagement.objects.get(user=normal_user)
+
+            if t_manager:
+                print("Deleted...")
+                t_manager.delete()
+        except:
+            print("All good")
+
+        tm = TokenManagement(user=normal_user, token=token.key, date_added=datetime.today())
+        tm.save()
+
+        serializer = TokenSerializer(tm)
+        return Response(serializer.data)

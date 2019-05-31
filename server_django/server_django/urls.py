@@ -25,7 +25,7 @@ from rest_framework.authtoken.views import ObtainAuthToken
 urlpatterns = [
     # web services
     path('ws/allmedia', views.get_all_media),
-    path('ws/media', views.get_media),
+    path('ws/media', views.get_single_media),
     path('ws/addmedia', views.add_media),
     path('ws/removemedia/<str:name>', views.del_media),
 
@@ -40,12 +40,11 @@ urlpatterns = [
     path('ws/userreviews', views.get_user_reviews),
 
     path('ws/user', views.get_user),
-    path('ws/adduser', views.add_user),
-
-    path('', views.home, name='home'),
+    path('ws/register', views.register),
+    path('ws/login', views.login),
     path('admin/', admin.site.urls),
-
     path('ws/auth/', ObtainAuthToken.as_view()),
+    path('ws/searchmedia', views.search_media),
 
 ]
 

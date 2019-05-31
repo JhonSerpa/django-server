@@ -1,4 +1,4 @@
-from app.models import User, MediaAuthor, Media, Review
+from app.models import User, MediaAuthor, Media, Review, TokenManagement
 from rest_framework import serializers
 from django.contrib.auth.models import User as uu
 
@@ -12,6 +12,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    media_name = serializers.CharField(source="media.name")
+    username = serializers.CharField(source="author.authentication.username")
+
     class Meta:
         model = Review
         fields = "__all__"
@@ -39,8 +42,21 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
 
 class ComboSerializer(serializers.Serializer):
+
     user = UserSerializer()
     admin = AdminUserSerializer()
 
+
+class ReviewMediaSerializer(serializers.Serializer):
+
+    review = ReviewSerializer(many=True)
+    media = MediaSerializer(many=True)
+
+
+
+class TokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TokenManagement
+        fields = ('token',)
 
 
