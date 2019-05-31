@@ -35,8 +35,9 @@ urlpatterns = [
     path('ws/removemediaauthors/<int:id>', views.del_media_author),
 
     path('ws/allreviews', views.get_all_reviews),
-    path('ws/reviewmedia', views.get_media_reviews),
+    path('ws/mediareviews', views.get_media_reviews),
     path('ws/addreview', views.add_review),
+    path('ws/userreviews', views.get_user_reviews),
 
     path('ws/user', views.get_user),
     path('ws/adduser', views.add_user),

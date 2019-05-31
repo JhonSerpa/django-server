@@ -5,7 +5,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from app.models import MediaAuthor, Media, User, Review
 from rest_framework.response import Response
-from app.serializers import MediaAuthorSerializer, MediaSerializer, UserSerializer, ReviewSerializer, AdminUserSerializer, ComboSerializer
+from app.serializers import MediaAuthorSerializer, MediaSerializer, UserSerializer, ReviewSerializer, \
+    AdminUserSerializer, ComboSerializer
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import authentication_classes, permission_classes
@@ -30,7 +31,6 @@ def home(request):
 
 @api_view(['GET'])
 def get_all_media(request):
-
     media = Media.objects.all()
     if 'max' in request.GET:
         _max = int(request.GET['max'])
@@ -46,7 +46,6 @@ def get_all_media(request):
 
 @api_view(['GET'])
 def get_media(request):
-
     id = int(request.GET['id'])
 
     try:
@@ -60,7 +59,7 @@ def get_media(request):
 
 """
     Adds media to the database!
-    
+
     todo: Images seem to not work correctly
 """
 
@@ -69,11 +68,9 @@ def get_media(request):
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def add_media(request):
-
     serializer = MediaSerializer(data=request.data)
 
     if serializer.is_valid():
-
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -215,6 +212,7 @@ def add_review(request):
     Gets the user
 """
 from collections import namedtuple
+
 Combo = namedtuple('Combo', ('user', 'admin'))
 
 
@@ -222,17 +220,16 @@ Combo = namedtuple('Combo', ('user', 'admin'))
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def get_user(request):
-
     id = int(request.GET["id"])
 
     try:
 
         user = User.objects.get(id=id)
-        uu = user.authentication
+        uup = user.authentication
 
         cmb = Combo(
             user=user,
-            admin=uu,
+            admin=uup,
         )
 
     except User.DoesNotExist:
@@ -247,8 +244,10 @@ def get_user(request):
     Adds a user
 """
 
-# This is like the Register thingy
+
 @api_view(['POST'])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
 def add_user(request):
     serializer = UserSerializer(data=request.data)
 
@@ -262,3 +261,11 @@ def add_user(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['GET'])
+def get_user_reviews(request):
+    user_id = int(request.GET["id"])
+    reviews = Review.objects.filter(author_id=user_id)
+    print(reviews)
+    serializer = ReviewSerializer(reviews, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)

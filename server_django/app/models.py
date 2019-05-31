@@ -80,3 +80,13 @@ class Review(models.Model):
 
     def __str__(self):
         return str(self.author) + " - " + str(self.media)
+
+
+class TokenManagement(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.CharField(max_length=1000)
+    date_added = models.DateField(default=datetime.datetime.today)
+
+    def __str__(self):
+        return str(self.user) + '-' + str(self.date_added)
+
