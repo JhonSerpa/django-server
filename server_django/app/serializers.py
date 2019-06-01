@@ -14,6 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     media_name = serializers.CharField(source="media.name")
     username = serializers.CharField(source="author.authentication.username")
+    img = serializers.CharField(source="author.img")
 
     class Meta:
         model = Review

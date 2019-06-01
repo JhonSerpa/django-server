@@ -422,7 +422,7 @@ def get_user_by_token(request):
         tkn = TokenManagement.objects.get(token=tokn)
     except TokenManagement.DoesNotExist:
         return Response(status.HTTP_404_NOT_FOUND)
-    
+
     us = uu.objects.get(username=tkn.user.authentication)
 
     cmb = Combo(
