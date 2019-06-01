@@ -26,6 +26,15 @@ def get_all_media(request):
     return Response(serializer.data)
 
 
+# Designates if a token has the power to change information
+def can_change_info(token):
+    tkn = TokenManagement.objects.get(token=token)
+    us = uu.objects.get(username=tkn.user.authentication)
+    if us.is_staff or us.is_superuser:
+        return True
+    return False
+
+
 # Gets a single media given an id
 # noinspection PyBroadException
 @api_view(['GET'])
@@ -49,6 +58,12 @@ def get_single_media(request):
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def add_media(request):
+    token_auth = str(request.META.get('HTTP_AUTHORIZATION'))  # return `None` if no such header# )
+    raw_token = token_auth.replace("token", " ").strip()
+
+    if not can_change_info(raw_token):
+        return Response(status.HTTP_401_UNAUTHORIZED)
+
     serializer = MediaSerializer(data=request.data)
 
     if serializer.is_valid():
@@ -79,6 +94,12 @@ def search_media(request):
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def del_media(request, name):
+    token_auth = str(request.META.get('HTTP_AUTHORIZATION'))  # return `None` if no such header# )
+    raw_token = token_auth.replace("token", " ").strip()
+
+    if not can_change_info(raw_token):
+        return Response(status.HTTP_401_UNAUTHORIZED)
+
     try:
         media = Media.objects.get(name=name)
     except Media.DoesNotExist:
@@ -133,6 +154,12 @@ def get_media_authors(request):
 def add_media_author(request):
     serializer = MediaAuthorSerializer(data=request.data)
 
+    token_auth = str(request.META.get('HTTP_AUTHORIZATION'))  # return `None` if no such header# )
+    raw_token = token_auth.replace("token", " ").strip()
+
+    if not can_change_info(raw_token):
+        return Response(status.HTTP_401_UNAUTHORIZED)
+
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -148,6 +175,12 @@ def add_media_author(request):
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def del_media_author(request, id):
+    token_auth = str(request.META.get('HTTP_AUTHORIZATION'))  # return `None` if no such header# )
+    raw_token = token_auth.replace("token", " ").strip()
+
+    if not can_change_info(raw_token):
+        return Response(status.HTTP_401_UNAUTHORIZED)
+
     try:
         media_author = MediaAuthor.objects.get(id=id)
     except MediaAuthor.DoesNotExist:
@@ -214,8 +247,6 @@ Combo = namedtuple('Combo', ('user', 'admin'))
 
 
 @api_view(["GET"])
-@authentication_classes((TokenAuthentication,))
-@permission_classes((IsAuthenticated,))
 def get_user(request):
     id = int(request.GET["id"])
 
@@ -282,8 +313,8 @@ def login(request):
         user = authenticate(username=username, password=password)
     except User.DoesNotExist:
         return Response(status.HTTP_204_NO_CONTENT)
-
     user_auth = uu.objects.get(username=user)
+
     try:
         normal_user = User.objects.get(authentication=user_auth.id)
     except User.DoesNotExist:
@@ -319,6 +350,12 @@ def login(request):
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def edit_author(request):
+    token_auth = str(request.META.get('HTTP_AUTHORIZATION')) # return `None` if no such header# )
+    raw_token = token_auth.replace("token", " ").strip()
+
+    if not can_change_info(raw_token):
+        return Response(status.HTTP_401_UNAUTHORIZED)
+
     au_id = int(request.GET["id"])
     try:
         author = MediaAuthor.objects.get(id=au_id)
@@ -336,6 +373,12 @@ def edit_author(request):
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def edit_media(request):
+    token_auth = str(request.META.get('HTTP_AUTHORIZATION'))  # return `None` if no such header# )
+    raw_token = token_auth.replace("token", " ").strip()
+
+    if not can_change_info(raw_token):
+        return Response(status.HTTP_401_UNAUTHORIZED)
+
     media_id = int(request.GET["id"])
     try:
         media = Media.objects.get(id=media_id)
@@ -343,6 +386,29 @@ def edit_media(request):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     serializer = MediaSerializer(media, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["PUT"])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def edit_media_author(request):
+    token_auth = str(request.META.get('HTTP_AUTHORIZATION'))  # return `None` if no such header# )
+    raw_token = token_auth.replace("token", " ").strip()
+
+    if not can_change_info(raw_token):
+        return Response(status.HTTP_401_UNAUTHORIZED)
+
+    media_author = int(request.GET["id"])
+    try:
+        media = MediaAuthor.objects.get(id=media_author)
+    except MediaAuthor.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = MediaAuthorSerializer(media, data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)

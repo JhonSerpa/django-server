@@ -47,6 +47,7 @@ urlpatterns = [
     path('ws/searchmedia', views.search_media),
     path('ws/editauthor', views.edit_author),
     path('ws/editmedia', views.edit_media),
+    path('ws/editmediaauthor', views.edit_media_author),
 
 ]
 
