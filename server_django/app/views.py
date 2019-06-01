@@ -413,3 +413,24 @@ def edit_media_author(request):
         serializer.save()
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+def get_user_by_token(request):
+    tokn = request.GET['token']
+    try:
+        tkn = TokenManagement.objects.get(token=tokn)
+    except TokenManagement.DoesNotExist:
+        return Response(status.HTTP_404_NOT_FOUND)
+    
+    us = uu.objects.get(username=tkn.user.authentication)
+
+    cmb = Combo(
+        user=tkn.user,
+        admin=us,
+    )
+
+    serializer = ComboSerializer(cmb)
+
+    return Response(data=serializer.data)
+
