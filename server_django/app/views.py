@@ -312,3 +312,38 @@ def login(request):
 
         serializer = TokenSerializer(tm)
         return Response(serializer.data)
+
+
+
+@api_view(["PUT"])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def edit_author(request):
+    au_id = int(request.GET["id"])
+    try:
+        author = MediaAuthor.objects.get(id=au_id)
+    except MediaAuthor.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = MediaAuthorSerializer(author, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["PUT"])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def edit_media(request):
+    media_id = int(request.GET["id"])
+    try:
+        media = Media.objects.get(id=media_id)
+    except Media.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = MediaSerializer(media, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

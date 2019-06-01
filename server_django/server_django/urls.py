@@ -45,6 +45,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('ws/auth/', ObtainAuthToken.as_view()),
     path('ws/searchmedia', views.search_media),
+    path('ws/editauthor', views.edit_author),
+    path('ws/editmedia', views.edit_media),
 
 ]
 
