@@ -29,7 +29,7 @@ class MediaAuthorSerializer(serializers.ModelSerializer):
 
 class MediaSerializer(serializers.ModelSerializer):
 
-    author = serializers.PrimaryKeyRelatedField(read_only=True)
+    author = serializers.PrimaryKeyRelatedField(queryset=MediaAuthor.objects.all())
 
     class Meta:
         model = Media

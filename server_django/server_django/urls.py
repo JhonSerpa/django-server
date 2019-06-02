@@ -49,6 +49,7 @@ urlpatterns = [
     path('ws/editmedia', views.edit_media),
     path('ws/editmediaauthor', views.edit_media_author),
     path('ws/getusername', views.get_user_by_token),
+    path('ws/edituser', views.edit_user),
 
 ]
 

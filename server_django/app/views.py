@@ -64,6 +64,7 @@ def add_media(request):
     if not can_change_info(raw_token):
         return Response(status.HTTP_401_UNAUTHORIZED)
 
+    MediaAuthor.objects.get(id=int(request.data['author']))
     serializer = MediaSerializer(data=request.data)
 
     if serializer.is_valid():
@@ -102,10 +103,11 @@ def del_media(request, name):
 
     try:
         media = Media.objects.get(name=name)
+        print(media)
     except Media.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
     media.delete()
-    return Response(status=status.HTTP_204_NO_CONTENT)
+    return Response(status=status.HTTP_200_OK)
 
 
 """
@@ -433,4 +435,22 @@ def get_user_by_token(request):
     serializer = ComboSerializer(cmb)
 
     return Response(data=serializer.data)
+
+
+@api_view(["PUT"])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def edit_user(request):
+    user_id = int(request.GET["id"])
+    try:
+        user = User.objects.get(authentication_id=user_id)
+        us = uu.objects.get(username=user.authentication)
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = AdminUserSerializer(us, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
