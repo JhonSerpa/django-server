@@ -279,18 +279,21 @@ def register(request):
     serializer = UserSerializer(data=request.data)
 
     if serializer.is_valid():
-        user = uu.objects.create_user(request.data['username'], 'example@thebeatles.com', request.data['password'])
-        user.save()
+        try:
+            user = uu.objects.create_user(request.data['username'], request.data['email'], request.data['password'])
+            user.save()
 
-        new_usr = User(authentication_id=user.id)
-        new_usr.save()
+            new_usr = User(authentication_id=user.id)
+            new_usr.save()
 
-        token, created = Token.objects.get_or_create(user=user)
+            token, created = Token.objects.get_or_create(user=user)
 
-        tm = TokenManagement(user=new_usr, token=token.key, date_added=datetime.today())
-        tm.save()
+            tm = TokenManagement(user=new_usr, token=token.key, date_added=datetime.today())
+            tm.save()
 
-        serializer = TokenSerializer(tm)
+            serializer = TokenSerializer(tm)
+        except:
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -449,6 +452,26 @@ def edit_user(request):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     serializer = AdminUserSerializer(us, data=request.data)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["PUT"])
+@authentication_classes((TokenAuthentication,))
+@permission_classes((IsAuthenticated,))
+def edit_user_not_admin(request):
+    user_id = int(request.GET["id"])
+    try:
+        user = User.objects.get(id=user_id)
+        us = uu.objects.get(username=user.authentication)
+    except User.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = AdminUserSerializer(us, data=request.data)
+
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)

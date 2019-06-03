@@ -50,6 +50,7 @@ urlpatterns = [
     path('ws/editmediaauthor', views.edit_media_author),
     path('ws/getusername', views.get_user_by_token),
     path('ws/edituser', views.edit_user),
+    path('ws/editusernotadmin', views.edit_user_not_admin),
 
 ]
 
